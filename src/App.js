@@ -20,7 +20,20 @@ const ExcelToPdfStyled = () => {
       workbook.SheetNames.forEach((sheetName) => {
         const worksheet = workbook.Sheets[sheetName];
         const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        allSheets.push({ name: sheetName, data: sheetData });
+
+        // Determine the max number of columns in the sheet
+        const maxCols = Math.max(...sheetData.map(row => row.length));
+
+        // Normalize rows by adding empty cells to match maxCols
+        const normalizedData = sheetData.map(row => {
+          const newRow = Array(maxCols).fill('');
+          row.forEach((cell, index) => {
+            newRow[index] = cell;
+          });
+          return newRow;
+        });
+
+        allSheets.push({ name: sheetName, data: normalizedData });
       });
 
       setSheetsData(allSheets);
@@ -30,33 +43,21 @@ const ExcelToPdfStyled = () => {
   };
 
   const downloadPdf = async (sheet) => {
-    // Select the table by ID
     const tableElement = document.getElementById(`table-${sheet.name}`);
-    
-    // Capture the HTML content as a canvas
-    const canvas = await html2canvas(tableElement, { scale: 2 });
+    const canvas = await html2canvas(tableElement, { scale: 3 });
     const imgData = canvas.toDataURL('image/png');
 
-    // Set up jsPDF with landscape orientation and A4 size
     const pdf = new jsPDF({
-      orientation: 'landscape', // Options: 'portrait' or 'landscape'
+      orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
 
-    // Adjust dimensions to fit content on the page
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = pageWidth - 20;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    // Set font sizes
-    pdf.setFontSize(14); // Adjust font size as needed
-
-    // Add image to PDF at calculated size
     pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-
-    // Save the generated PDF
     pdf.save(`${sheet.name}.pdf`);
   };
 
@@ -79,7 +80,7 @@ const ExcelToPdfStyled = () => {
               </tbody>
             </table>
           </div>
-          <button onClick={() => downloadPdf(sheet)}>Download PDF</button>
+          <button onClick={() => downloadPdf(sheet)}>Download {sheet.name} PDF</button>
         </div>
       ))}
     </div>
