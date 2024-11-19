@@ -44,20 +44,41 @@ const ExcelToPdfStyled = () => {
 
   const downloadPdf = async (sheet) => {
     const tableElement = document.getElementById(`table-${sheet.name}`);
-    const canvas = await html2canvas(tableElement, { scale: 3 });
-    const imgData = canvas.toDataURL('image/png');
-
-    const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4',
+  
+    // Use html2canvas to capture the table element
+    const canvas = await html2canvas(tableElement, {
+      scale: 3, // Higher scale for better quality
+      useCORS: true, // Ensures cross-origin resources can be loaded
     });
-
+  
+    // Get image dimensions
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+  
+    // Create PDF instance with appropriate page orientation
+    const pdf = new jsPDF({
+      orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+      unit: 'pt',
+      format: [imgWidth, imgHeight], // Dynamic format to match table size
+    });
+  
+    // Add the captured image to the PDF
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 20;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+    const pageHeight = pdf.internal.pageSize.getHeight();
+  
+    const scaledWidth = pageWidth - 20; // Add some padding
+    const scaledHeight = (imgHeight * scaledWidth) / imgWidth;
+  
+    pdf.addImage(
+      canvas.toDataURL('image/png'),
+      'PNG',
+      10, // Padding from left
+      10, // Padding from top
+      scaledWidth, // Scale to fit width
+      scaledHeight // Scale to maintain aspect ratio
+    );
+  
+    // Save the PDF with the sheet's name
     pdf.save(`${sheet.name}.pdf`);
   };
 
