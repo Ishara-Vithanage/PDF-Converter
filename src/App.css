@@ -34,22 +34,25 @@ button:hover {
 
 /* Table Styling */
 .table-container {
-  display: inline-block;
   width: 100%;
-  overflow-x: auto;
+  overflow: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
 }
 
-td, th {
-  border: 1px solid #ddd;
+th, td {
+  border: 1px solid #ccc;
   padding: 8px;
   text-align: left;
-  white-space: nowrap;
+}
+
+th {
+  background-color: #f4f4f4;
 }
 
 tr:nth-child(even) {
